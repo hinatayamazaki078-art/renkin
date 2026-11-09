@@ -1,0 +1,1748 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>錬金術アトリエ - 研究者の部屋</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Yuji+Syuku&family=Zen+Maru+Gothic:wght@400;700&display=swap');
+    
+    html, body {
+      font-family: 'Zen Maru Gothic', sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      position: fixed;
+      background-color: #030712;
+      touch-action: none;
+    }
+
+    .font-title {
+      font-family: 'Yuji Syuku', serif;
+    }
+
+    .potion-bubble {
+      animation: float-up 2.2s ease-in infinite;
+    }
+
+    @keyframes float-up {
+      0% { transform: translateY(0) scale(0.6); opacity: 0.8; }
+      50% { opacity: 0.9; }
+      100% { transform: translateY(-70px) scale(1.3); opacity: 0; }
+    }
+
+    /* 緑の煙のアニメーション */
+    .green-smoke {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(74, 222, 128, 0.6) 0%, rgba(34, 197, 94, 0.3) 50%, rgba(0, 0, 0, 0) 80%);
+      filter: blur(8px);
+      animation: smoke-rise 3.5s ease-out infinite;
+      pointer-events: none;
+    }
+
+    @keyframes smoke-rise {
+      0% {
+        transform: translateY(0) scale(0.5) rotate(0deg);
+        opacity: 0;
+      }
+      30% {
+        opacity: 0.75;
+      }
+      80% {
+        opacity: 0.3;
+      }
+      100% {
+        transform: translateY(-90px) scale(1.8) rotate(25deg);
+        opacity: 0;
+      }
+    }
+
+    /* 精霊の上下ふわふわ浮遊アニメーション */
+    .spirit-float {
+      animation: float-spirit 3s ease-in-out infinite;
+    }
+
+    @keyframes float-spirit {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-12px); }
+    }
+
+    .cauldron-shake {
+      animation: shake 0.3s ease-in-out;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: scale(1) rotate(0deg); }
+      25% { transform: scale(1.05) rotate(-4deg); }
+      75% { transform: scale(1.05) rotate(4deg); }
+    }
+
+    .spin-slow {
+      animation: spin 8s linear infinite;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #1f2937;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #4b5563;
+      border-radius: 3px;
+    }
+
+    .item-img-icon {
+      object-fit: contain;
+      display: inline-block;
+    }
+
+    /* 背景画像用スタイル */
+    .game-bg {
+      background-image: linear-gradient(to bottom, rgba(15, 23, 42, 0.45), rgba(2, 6, 23, 0.65)), url('背景.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+  </style>
+
+  <!-- Firebase SDK の読み込みと初期化 -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
+    import { getFirestore, collection, getDocs, getDoc, query, orderBy, limit, setDoc, doc, addDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCZfuJ-6unllYiQZ5yI9OJojfi7aCdmylc",
+      authDomain: "renkin-8fbc3.firebaseapp.com",
+      projectId: "renkin-8fbc3",
+      storageBucket: "renkin-8fbc3.firebasestorage.app",
+      messagingSenderId: "639807823009",
+      appId: "1:639807823009:web:ac939e11b71964fd28e4e0",
+      measurementId: "G-1GE4FNBT85"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const db = getFirestore(app);
+
+    window.db = db;
+    window.dbMethods = { collection, getDocs, getDoc, query, orderBy, limit, setDoc, doc, addDoc, onSnapshot, serverTimestamp };
+  </script>
+</head>
+<body class="bg-gray-950 text-gray-100 w-full h-full flex items-center justify-center p-0 m-0 overflow-hidden">
+
+  <!-- BGM用オーディオ要素 -->
+  <audio id="bgm-audio" src="BGM.mp3" loop preload="auto"></audio>
+
+  <!-- スマホ風フレーム -->
+  <div class="w-full max-w-md h-full md:h-[840px] bg-slate-900 md:rounded-3xl shadow-2xl flex flex-col overflow-hidden border-0 md:border-4 border-amber-900/40 relative">
+    
+    <!-- ヘッダー（インカメラ回避のために少し下に下げ、タイトル削除・ボタン最適配置） -->
+    <header class="bg-slate-800/90 border-b border-amber-900/30 px-2.5 pt-7 pb-2.5 flex justify-between items-center backdrop-blur z-10 shrink-0">
+      <div class="flex items-center space-x-1 shrink-0">
+        <!-- BGM コントロールボタン -->
+        <button id="bgm-toggle-btn" onclick="toggleBGM()" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-gray-400 px-2 py-1 rounded-lg border border-slate-700 flex items-center gap-1 transition font-bold shrink-0">
+          <i id="bgm-icon" class="fa-solid fa-volume-xmark"></i> <span id="bgm-text">BGM OFF</span>
+        </button>
+      </div>
+
+      <div class="flex items-center space-x-1">
+        <!-- オンラインチャットボタン -->
+        <button onclick="openChatModal()" title="交流広場チャット" class="w-7 h-7 bg-teal-700 hover:bg-teal-600 text-teal-100 rounded-lg border border-teal-400/40 flex items-center justify-center transition shadow shrink-0">
+          <i class="fa-solid fa-comments text-[11px] text-emerald-300"></i>
+        </button>
+        <!-- オンラインランキングボタン -->
+        <button onclick="openRankingModal()" title="オンラインランキング" class="w-7 h-7 bg-indigo-700 hover:bg-indigo-600 text-indigo-100 rounded-lg border border-indigo-400/40 flex items-center justify-center transition shadow shrink-0">
+          <i class="fa-solid fa-trophy text-[11px] text-yellow-300"></i>
+        </button>
+        <!-- 確率ボタン -->
+        <button onclick="openModal('prob-modal')" title="確率一覧" class="text-[10px] bg-slate-700 hover:bg-slate-600 text-amber-200 px-2 py-1 rounded-lg border border-amber-500/30 flex items-center gap-1 transition shrink-0">
+          <i class="fa-solid fa-dice text-[10px]"></i> 確率
+        </button>
+        <!-- 図鑑ボタン -->
+        <button onclick="openModal('dict-modal')" title="図鑑" class="text-[10px] bg-amber-700 hover:bg-amber-600 text-amber-100 px-2 py-1 rounded-lg border border-amber-400/40 flex items-center gap-1 font-bold transition shrink-0">
+          <i class="fa-solid fa-book-bookmark text-[10px]"></i> 図鑑
+        </button>
+      </div>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main class="flex-1 relative flex flex-col justify-between p-3 game-bg overflow-hidden">
+      
+      <div class="absolute inset-0 pointer-events-none opacity-20">
+        <div class="absolute top-1/4 left-1/4 w-2 h-2 bg-amber-400 rounded-full animate-ping"></div>
+        <div class="absolute top-1/3 right-1/4 w-1.5 h-1.5 bg-purple-400 rounded-full animate-ping delay-500"></div>
+        <div class="absolute bottom-1/3 left-1/3 w-2 h-2 bg-emerald-400 rounded-full animate-ping delay-1000"></div>
+      </div>
+
+      <!-- アバター & ステータス -->
+      <div class="relative z-0 flex flex-col gap-1.5 bg-slate-900/85 p-2.5 rounded-2xl border border-amber-500/30 backdrop-blur shadow-lg shrink-0">
+        <div class="flex items-center justify-between w-full">
+          <div class="flex items-center space-x-2.5 flex-1 min-w-0">
+            <div class="relative cursor-pointer" onclick="openModal('profile-modal')">
+              <div class="w-12 h-12 rounded-full bg-gradient-to-tr from-amber-600 to-yellow-400 p-0.5 shadow-lg">
+                <div class="w-full h-full bg-slate-900 rounded-full flex items-center justify-center overflow-hidden border border-slate-800">
+                  <img id="player-avatar-img" src="精霊.png" alt="精霊アイコン" class="w-8 h-8 object-contain">
+                </div>
+              </div>
+              <span id="player-level" class="absolute -bottom-1 -right-1 bg-amber-500 text-slate-950 text-[10px] font-extrabold px-1.5 py-0.2 rounded-full border border-slate-900">Lv.1</span>
+            </div>
+            
+            <div class="flex-1 min-w-0 cursor-pointer" onclick="openModal('profile-modal')">
+              <div class="flex items-center gap-1 mb-0.5">
+                <span id="player-name-display" class="text-xs font-bold text-amber-300 truncate">アトリエ主人</span>
+                <i class="fa-solid fa-pen-to-square text-[9px] text-gray-400"></i>
+              </div>
+              <div class="flex items-center gap-1 mb-1">
+                <span class="text-[9px] text-gray-400 font-semibold">ランク:</span>
+                <span id="player-rank-display" class="text-[9px] font-bold text-amber-400 bg-amber-950/80 px-1.5 py-0.2 rounded border border-amber-500/30">見習い錬金術士</span>
+              </div>
+              
+              <div class="w-full bg-slate-950 rounded-full h-1.5 p-0.5 border border-slate-700 relative overflow-hidden">
+                <div id="exp-progress" class="bg-gradient-to-r from-emerald-500 via-teal-400 to-amber-400 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+              </div>
+              <div class="flex justify-end mt-0.5">
+                <span id="exp-text" class="text-[8px] text-gray-300 font-mono">0 / 100 EXP</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 精霊に餌ボタン（ホーム展示ラックは削除） -->
+          <button onclick="openSpiritFeedModal()" class="bg-sky-950 hover:bg-sky-900 text-sky-200 border border-sky-500/50 px-2.5 py-2 rounded-xl text-[10px] font-bold flex items-center gap-1 shrink-0 shadow transition active:scale-95 ml-2">
+            <i class="fa-solid fa-cookie-bite text-sky-300 text-xs"></i> 精霊に餌
+          </button>
+        </div>
+      </div>
+
+      <!-- 中央：輝く緑の魔法大釜エリア -->
+      <div class="my-auto flex flex-col items-center justify-center relative py-2 shrink-0">
+        
+        <div class="w-44 bg-slate-900/90 rounded-full h-3.5 p-0.5 border border-amber-500/30 mb-2 shadow-inner relative overflow-hidden backdrop-blur-sm">
+          <div id="tap-progress" class="bg-gradient-to-r from-emerald-500 via-green-400 to-amber-300 h-full rounded-full transition-all duration-150" style="width: 0%"></div>
+          <span id="tap-count-text" class="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-white drop-shadow">素材採取まで: 0 / 10</span>
+        </div>
+
+        <div id="cauldron" onclick="tapCauldron(event)" class="relative cursor-pointer group touch-manipulation transform active:scale-95 transition-transform duration-75 flex flex-col items-center">
+          
+          <div class="absolute -inset-4 bg-gradient-to-r from-emerald-500/30 via-green-400/40 to-teal-500/30 rounded-full blur-xl group-hover:opacity-100 transition duration-500 opacity-70"></div>
+          
+          <div class="absolute top-2 w-40 h-28 pointer-events-none z-10 overflow-visible">
+            <div class="green-smoke w-12 h-12 top-4 left-4" style="animation-delay: 0s;"></div>
+            <div class="green-smoke w-14 h-14 top-2 left-12" style="animation-delay: 1.2s;"></div>
+            <div class="green-smoke w-10 h-10 top-6 right-6" style="animation-delay: 2.1s;"></div>
+            
+            <div class="absolute top-6 left-10 potion-bubble text-emerald-300 text-xs">🫧</div>
+            <div class="absolute top-4 left-20 potion-bubble text-green-200 text-sm" style="animation-delay: 0.8s">🫧</div>
+            <div class="absolute top-8 right-10 potion-bubble text-emerald-200 text-[10px]" style="animation-delay: 1.5s">🫧</div>
+          </div>
+
+          <div class="relative w-40 h-40 flex items-center justify-center z-0">
+            <img src="輝く緑の魔法大釜.png" alt="輝く緑の魔法大釜" class="w-full h-full object-contain filter drop-shadow-[0_8px_12px_rgba(16,185,129,0.3)]">
+          </div>
+
+          <div class="text-center mt-1 z-20">
+            <span class="text-[11px] bg-emerald-950/90 text-emerald-300 px-2.5 py-0.5 rounded-full border border-emerald-500/40 font-semibold animate-pulse shadow-lg backdrop-blur-sm">
+              タップして素材採取！
+            </span>
+          </div>
+        </div>
+
+        <div id="drop-popups" class="absolute inset-0 pointer-events-none flex flex-col items-center justify-center z-30"></div>
+      </div>
+
+      <!-- 下部操作エリア -->
+      <div class="space-y-2 z-10 shrink-0 pb-1">
+        <div class="grid grid-cols-2 gap-2.5">
+          <button onclick="openModal('inventory-modal')" class="bg-slate-900/90 hover:bg-slate-800 text-amber-200 border border-amber-900/50 rounded-xl py-2.5 px-3 flex items-center justify-center space-x-2 shadow-lg transition active:scale-95 backdrop-blur-sm">
+            <i class="fa-solid fa-box-archive text-base text-amber-400"></i>
+            <span class="font-bold text-xs">所持素材一覧</span>
+          </button>
+          
+          <button onclick="openModal('alchemy-modal')" class="bg-gradient-to-r from-emerald-600 to-amber-600 hover:from-emerald-500 hover:to-amber-500 text-white border border-emerald-400/50 rounded-xl py-2.5 px-3 flex items-center justify-center space-x-2 shadow-xl transition active:scale-95 font-bold">
+            <i class="fa-solid fa-flask text-base text-emerald-200 animate-bounce"></i>
+            <span class="text-xs">釜に素材投入</span>
+          </button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ==================== オンラインチャット モーダル ==================== -->
+  <div id="chat-modal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-teal-500/60 rounded-2xl w-full max-w-sm h-[85vh] p-4 shadow-2xl relative flex flex-col">
+      <button onclick="closeModal('chat-modal')" class="absolute top-3 right-3 text-gray-400 hover:text-white text-xl w-8 h-8 flex items-center justify-center rounded-full bg-slate-800 z-10">×</button>
+      
+      <h3 class="text-teal-300 font-bold text-base mb-1 flex items-center gap-2 border-b border-slate-800 pb-2.5">
+        <i class="fa-solid fa-comments text-emerald-400"></i> 交流広場（オンラインチャット）
+      </h3>
+
+      <div id="chat-messages-container" class="flex-1 overflow-y-auto space-y-3 py-3 pr-1 text-xs">
+        <div class="text-center py-8 text-gray-500 animate-pulse">メッセージを取得中...</div>
+      </div>
+
+      <div class="pt-2 border-t border-slate-800 flex gap-2">
+        <input type="text" id="chat-input" placeholder="メッセージを入力..." maxlength="100" onkeydown="if(event.key==='Enter') sendChatMessage()" class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-400">
+        <button onclick="sendChatMessage()" class="bg-teal-600 hover:bg-teal-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition shrink-0 active:scale-95">
+          送信
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 他人のプロフィール閲覧 モーダル ==================== -->
+  <div id="other-profile-modal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-indigo-500/60 rounded-2xl w-full max-w-xs p-5 shadow-2xl relative flex flex-col items-center">
+      <button onclick="closeModal('other-profile-modal')" class="absolute top-3 right-3 text-gray-400 hover:text-white text-xl w-8 h-8 flex items-center justify-center rounded-full bg-slate-800">×</button>
+      
+      <div class="w-20 h-20 rounded-full bg-gradient-to-tr from-indigo-500 to-amber-400 p-0.5 shadow-xl mb-3 mt-2">
+        <div class="w-full h-full bg-slate-950 rounded-full flex items-center justify-center overflow-hidden border border-slate-800">
+          <img id="other-profile-avatar" src="精霊.png" alt="精霊" class="w-14 h-14 object-contain">
+        </div>
+      </div>
+
+      <h3 id="other-profile-name" class="text-base font-bold text-amber-300 font-title mb-0.5">---</h3>
+      <div class="flex items-center gap-2 mb-3">
+        <span id="other-profile-level" class="text-xs font-bold text-amber-400 bg-amber-950/80 px-2 py-0.5 rounded border border-amber-600/40">Lv.1</span>
+        <span id="other-profile-rank" class="text-xs font-bold text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-600/40">---</span>
+      </div>
+
+      <div class="w-full bg-slate-950 p-3 rounded-xl border border-slate-800">
+        <div class="text-[11px] font-bold text-amber-400/90 mb-2 text-center flex items-center justify-center gap-1">
+          <i class="fa-solid fa-crown text-yellow-400"></i> 自慢の素材展示
+        </div>
+        <div id="other-profile-showcase" class="grid grid-cols-3 gap-2"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== オンラインランキング モーダル ==================== -->
+  <div id="ranking-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-indigo-500/60 rounded-2xl w-full max-w-sm p-5 shadow-2xl relative flex flex-col max-h-[85vh]">
+      <button onclick="closeModal('ranking-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl w-8 h-8 flex items-center justify-center rounded-full bg-slate-800">×</button>
+      
+      <h3 class="text-indigo-400 font-bold text-lg mb-1 flex items-center gap-2">
+        <i class="fa-solid fa-trophy text-yellow-400"></i> オンラインレベルランキング
+      </h3>
+      <p class="text-xs text-gray-400 mb-4">アイコンをタップしてプロフィールを確認！</p>
+      
+      <div class="flex-1 overflow-y-auto space-y-2 pr-1" id="ranking-list-container">
+        <div class="text-center py-8 text-xs text-gray-500 animate-pulse">ランキングを読み込み中...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 精霊登場・会話演出 ==================== -->
+  <div id="spirit-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex flex-col items-center justify-center p-6 text-center cursor-pointer select-none" onclick="handleSpiritClick()">
+    
+    <div class="w-44 h-44 mb-6 spirit-float drop-shadow-[0_10px_25px_rgba(56,189,248,0.6)]">
+      <img id="spirit-img-display" src="精霊.png" alt="精霊" class="w-full h-full object-contain">
+    </div>
+
+    <div class="max-w-xs bg-slate-900/90 border-2 border-sky-400/80 rounded-3xl p-4 shadow-2xl relative">
+      <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-0 h-0 border-l-8 border-l-transparent border-r-8 border-r-transparent border-b-8 border-b-sky-400"></div>
+      <p id="spirit-dialogue" class="text-sm text-sky-200 font-bold leading-relaxed"></p>
+    </div>
+
+    <div class="mt-6 text-xs text-sky-400/90 font-mono tracking-widest animate-pulse flex items-center gap-1.5">
+      <span>画面をタップして進む</span> <i class="fa-solid fa-caret-down"></i>
+    </div>
+  </div>
+
+  <!-- ==================== 精霊に餌をあげるモーダル ==================== -->
+  <div id="spirit-feed-modal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-sky-500/60 rounded-2xl w-full max-w-md p-5 shadow-2xl relative flex flex-col max-h-[85vh]">
+      <button onclick="closeModal('spirit-feed-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl w-8 h-8 flex items-center justify-center rounded-full bg-slate-800">×</button>
+      
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-12 h-12 spirit-float shrink-0">
+          <img id="feed-modal-spirit-img" src="精霊.png" alt="精霊" class="w-full h-full object-contain">
+        </div>
+        <div>
+          <h3 class="text-sky-300 font-bold text-base flex items-center gap-1.5">
+            <i class="fa-solid fa-cookie-bite"></i> 精霊にごはんをあげる
+          </h3>
+          <p class="text-[11px] text-gray-400">所持している素材を1つ選んで食べさせよう！</p>
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-y-auto grid grid-cols-2 gap-2.5 p-1" id="spirit-feed-list"></div>
+    </div>
+  </div>
+
+  <!-- ==================== 各種モーダル群 ==================== -->
+
+  <!-- 1. 確率一覧モーダル -->
+  <div id="prob-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-amber-900/60 rounded-2xl w-full max-w-sm p-5 shadow-2xl relative">
+      <button onclick="closeModal('prob-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl w-8 h-8 flex items-center justify-center rounded-full bg-slate-800">×</button>
+      <h3 class="text-amber-400 font-bold text-lg mb-1 flex items-center gap-2">
+        <i class="fa-solid fa-dice"></i> 採取確率ドロップ表
+      </h3>
+      <p class="text-xs text-gray-400 mb-4">釜を10回タップすると以下の確率で入手可能</p>
+      
+      <div class="space-y-2 max-h-80 overflow-y-auto pr-1" id="prob-list"></div>
+    </div>
+  </div>
+
+  <!-- 2. 所持素材一覧モーダル -->
+  <div id="inventory-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-amber-900/60 rounded-2xl w-full max-w-md p-5 shadow-2xl relative flex flex-col max-h-[85vh]">
+      <button onclick="closeModal('inventory-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl w-8 h-8 flex items-center justify-center rounded-full bg-slate-800">×</button>
+      <h3 class="text-amber-400 font-bold text-lg mb-1 flex items-center gap-2">
+        <i class="fa-solid fa-box-archive"></i> 所持アイテム一覧
+      </h3>
+      <p class="text-xs text-gray-400 mb-4">採掘や調合で手に入れた全所持アイテム</p>
+      
+      <div class="flex-1 overflow-y-auto grid grid-cols-2 gap-2.5 p-1" id="inventory-list"></div>
+    </div>
+  </div>
+
+  <!-- 3. 発見素材一覧モーダル -->
+  <div id="dict-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-amber-900/60 rounded-2xl w-full max-w-md p-5 shadow-2xl relative flex flex-col max-h-[85vh]">
+      <button onclick="closeModal('dict-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl w-8 h-8 flex items-center justify-center rounded-full bg-slate-800">×</button>
+      <h3 class="text-amber-400 font-bold text-lg mb-1 flex items-center gap-2">
+        <i class="fa-solid fa-book-bookmark"></i> 発見素材一覧
+      </h3>
+      <p class="text-xs text-gray-400 mb-4">これまでに発見・作成に成功した素材カタログ</p>
+      
+      <div class="flex-1 overflow-y-auto grid grid-cols-2 gap-2.5 p-1" id="dict-list"></div>
+    </div>
+  </div>
+
+  <!-- 4. プロフィール＆展示選択モーダル -->
+  <div id="profile-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-amber-600/60 rounded-2xl w-full max-w-md p-5 shadow-2xl relative flex flex-col max-h-[90vh]">
+      <button onclick="closeModal('profile-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl w-8 h-8 flex items-center justify-center rounded-full bg-slate-800">×</button>
+      
+      <h3 class="text-amber-400 font-bold text-lg mb-3 flex items-center gap-2 font-title">
+        <i class="fa-solid fa-id-card"></i> 錬金術士プロフィール
+      </h3>
+
+      <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 mb-4 space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-amber-300 mb-1">錬金術士の名前</label>
+          <div class="flex gap-2">
+            <input type="text" id="player-name-input" maxlength="12" class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-amber-500">
+            <button onclick="savePlayerName()" class="bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs transition">変更</button>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-2 border-t border-slate-800/80">
+          <div>
+            <span class="text-xs font-bold text-gray-400 block">現在の術師ランク</span>
+            <span id="profile-rank-display" class="text-sm font-bold text-amber-400 font-title">見習い錬金術士</span>
+          </div>
+          <div class="text-right">
+            <span class="text-[10px] text-gray-400 block">総発見アイテム数</span>
+            <span id="profile-discovered-count" class="text-xs font-mono font-bold text-emerald-400">0種類</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-y-auto flex flex-col min-h-0">
+        <div class="text-xs font-bold text-amber-300 mb-1">自慢の素材展示（最大3つ）</div>
+        <p class="text-[11px] text-gray-400 mb-3">発見素材一覧から展示したい素材を選んでください</p>
+
+        <div class="grid grid-cols-3 gap-2 bg-slate-950 p-3 rounded-xl border border-slate-800 mb-4" id="showcase-select-slots"></div>
+
+        <div class="text-[11px] font-bold text-gray-300 mb-2">【選択可能な発見素材】</div>
+        <div class="flex-1 overflow-y-auto space-y-2 pr-1" id="showcase-selectable-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. 錬金調合画面モーダル -->
+  <div id="alchemy-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-amber-600/60 rounded-2xl w-full max-w-md p-5 shadow-2xl relative flex flex-col max-h-[90vh]">
+      <button onclick="closeModal('alchemy-modal')" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl w-8 h-8 flex items-center justify-center rounded-full bg-slate-800">×</button>
+      <h3 class="text-amber-400 font-bold text-lg mb-1 flex items-center gap-2">
+        <i class="fa-solid fa-flask"></i> 素材投入と研究調合
+      </h3>
+      <p class="text-xs text-gray-400 mb-3">最大5つの素材を選んで釜に投入してください</p>
+
+      <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 mb-4">
+        <div class="text-[11px] text-amber-300 font-semibold mb-2 flex justify-between">
+          <span>投入済みの素材 (<span id="slot-count">0</span>/5)</span>
+          <button onclick="clearSlots()" class="text-xs text-red-400 hover:text-red-300 underline">クリア</button>
+        </div>
+        <div class="grid grid-cols-5 gap-1.5" id="alchemy-slots"></div>
+      </div>
+
+      <div class="flex-1 overflow-y-auto space-y-2 pr-1 mb-4" id="alchemy-select-list"></div>
+
+      <button onclick="startAlchemyProcess()" id="mix-btn" disabled class="w-full py-3 bg-gray-700 text-gray-400 font-bold rounded-xl border border-gray-600 transition duration-200 disabled:opacity-50">
+        錬金調合を実行する
+      </button>
+    </div>
+  </div>
+
+  <!-- 6. 5秒間錬金演出中モーダル -->
+  <div id="loading-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden flex flex-col items-center justify-center p-4 text-center">
+    <div class="relative w-48 h-48 flex items-center justify-center mb-6">
+      <div class="absolute inset-0 border-4 border-dashed border-emerald-500/40 rounded-full spin-slow"></div>
+      <div class="absolute inset-4 border-2 border-amber-500/30 rounded-full animate-ping"></div>
+      <div class="w-28 h-28 animate-bounce flex items-center justify-center">
+        <img src="輝く緑の魔法大釜.png" alt="大釜" class="w-full h-full object-contain">
+      </div>
+    </div>
+    <h3 class="text-emerald-400 font-bold text-xl font-title mb-2 animate-pulse">魔力を練り上げ中...</h3>
+    <p class="text-xs text-gray-400">素材の元素が再構成されています（残り <span id="timer-text" class="text-amber-300 font-bold font-mono">5</span> 秒）</p>
+  </div>
+
+  <!-- 7. 調合結果画面モーダル -->
+  <div id="result-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border-2 border-amber-500 rounded-3xl w-full max-w-sm p-6 shadow-2xl text-center relative">
+      <div id="exp-badge" class="absolute top-4 right-4 bg-emerald-500/20 border border-emerald-400 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full">
+        +0 EXP
+      </div>
+
+      <div id="result-icon-bg" class="w-20 h-20 mx-auto rounded-full bg-amber-500/20 border-2 border-amber-400 flex items-center justify-center text-4xl mb-3 shadow-inner">
+        <span id="result-icon">❓</span>
+      </div>
+      
+      <div id="result-status" class="text-xs font-bold tracking-widest text-amber-400 uppercase mb-1">DISCOVERY!</div>
+      <h2 id="result-name" class="text-2xl font-bold text-white mb-2 font-title">???</h2>
+      <p id="result-desc" class="text-xs text-gray-300 mb-4 px-2">錬金の基本原則に従い新たな物質が誕生した！</p>
+      
+      <div class="bg-slate-950/80 p-2.5 rounded-xl border border-slate-800 mb-5">
+        <div class="text-[10px] text-gray-400 mb-1.5 font-bold">【投入した素材】</div>
+        <div id="used-materials-container" class="flex justify-center items-center gap-1.5 flex-wrap"></div>
+      </div>
+
+      <button onclick="closeModal('result-modal')" class="w-full py-3 bg-gradient-to-r from-amber-600 to-yellow-500 hover:from-amber-500 hover:to-yellow-400 text-slate-950 font-bold rounded-xl shadow-lg transition active:scale-95">
+        研究ノートに記録して戻る
+      </button>
+    </div>
+  </div>
+
+  <script>
+    let bgmAudio = null;
+    let bgmIsPlaying = false;
+    let chatUnsubscribe = null;
+
+    // フルスクリーン切り替え関数
+    function requestFullScreen() {
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen().catch(() => {});
+      } else if (elem.webkitRequestFullscreen) {
+        elem.webkitRequestFullscreen();
+      } else if (elem.msRequestFullscreen) {
+        elem.msRequestFullscreen();
+      }
+    }
+
+    function getPlayerId() {
+      let pid = localStorage.getItem('alchemy_player_id');
+      if (!pid) {
+        pid = 'user_' + Math.random().toString(36).substring(2, 11);
+        localStorage.setItem('alchemy_player_id', pid);
+      }
+      return pid;
+    }
+
+    // オンラインデータ更新
+    async function submitScoreToFirebase() {
+      if (!window.db) return;
+      try {
+        const { doc, setDoc, serverTimestamp } = window.dbMethods;
+        const userId = getPlayerId();
+        const discoveredKeys = Object.keys(state.discovered).filter(k => state.discovered[k]);
+
+        await setDoc(doc(window.db, "rankings", userId), {
+          userId: userId,
+          name: state.playerName,
+          level: state.level,
+          exp: state.exp,
+          rank: getAlchemistRank(discoveredKeys.length),
+          showcase: state.showcase || [],
+          spiritEvolved: state.spiritEvolved,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+      } catch (e) {
+        console.error("データ送信エラー:", e);
+      }
+    }
+
+    // 他人のプロフィール表示
+    async function openOtherProfile(userId) {
+      if (!window.db || !userId) return;
+      try {
+        const { doc, getDoc } = window.dbMethods;
+        const userDoc = await getDoc(doc(window.db, "rankings", userId));
+        
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          document.getElementById('other-profile-name').textContent = data.name || '名無しの錬金術士';
+          document.getElementById('other-profile-level').textContent = `Lv.${data.level || 1}`;
+          document.getElementById('other-profile-rank').textContent = data.rank || '見習い錬金術士';
+          document.getElementById('other-profile-avatar').src = data.spiritEvolved ? '精霊2.png' : '精霊.png';
+
+          const showcaseContainer = document.getElementById('other-profile-showcase');
+          let html = '';
+          const showcase = data.showcase || [];
+          for (let i = 0; i < 3; i++) {
+            if (i < showcase.length) {
+              const item = ITEMS[showcase[i]];
+              html += `
+                <div class="h-16 rounded-xl bg-slate-900 border border-amber-500/40 flex flex-col items-center justify-center p-1 shadow">
+                  ${getItemIconHTML(item, "w-8 h-8", "text-2xl")}
+                  <span class="text-[9px] text-amber-200 font-bold truncate w-full text-center mt-0.5">${item ? item.name : '???'}</span>
+                </div>
+              `;
+            } else {
+              html += `
+                <div class="h-16 rounded-xl bg-slate-900/60 border border-dashed border-slate-800 flex items-center justify-center text-slate-600 text-xs font-mono">
+                  なし
+                </div>
+              `;
+            }
+          }
+          showcaseContainer.innerHTML = html;
+          openModal('other-profile-modal');
+        }
+      } catch (e) {
+        console.error("プロフィール取得エラー:", e);
+      }
+    }
+
+    // チャット画面を開く＆リアルタイム受信開始
+    function openChatModal() {
+      openModal('chat-modal');
+      if (!window.db) return;
+
+      const container = document.getElementById('chat-messages-container');
+      const { collection, query, limit, onSnapshot } = window.dbMethods;
+      
+      const q = query(collection(window.db, "messages"), limit(50));
+
+      if (chatUnsubscribe) chatUnsubscribe();
+
+      chatUnsubscribe = onSnapshot(q, (snapshot) => {
+        if (snapshot.empty) {
+          container.innerHTML = `<div class="text-center py-8 text-gray-500">まだ発言がありません。<br>最初にメッセージを送ってみよう！</div>`;
+          return;
+        }
+
+        let messages = [];
+        snapshot.forEach(docSnap => messages.push({ id: docSnap.id, ...docSnap.data() }));
+
+        messages.sort((a, b) => {
+          const tA = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : a.createdAt) : 0;
+          const tB = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : b.createdAt) : 0;
+          return tA - tB;
+        });
+
+        const myId = getPlayerId();
+
+        container.innerHTML = messages.map(msg => {
+          const isMe = msg.userId === myId;
+          const spiritImgSrc = msg.spiritEvolved ? '精霊2.png' : '精霊.png';
+          
+          return `
+            <div class="flex gap-2 items-start ${isMe ? 'flex-row-reverse' : ''}">
+              <div onclick="openOtherProfile('${msg.userId}')" class="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center overflow-hidden shrink-0 cursor-pointer hover:opacity-80 transition">
+                <img src="${spiritImgSrc}" alt="精霊" class="w-6 h-6 object-contain">
+              </div>
+              <div class="max-w-[75%]">
+                <div class="flex items-center gap-1.5 mb-0.5 ${isMe ? 'justify-end' : ''}">
+                  <span onclick="openOtherProfile('${msg.userId}')" class="font-bold text-[11px] text-amber-300 truncate cursor-pointer hover:underline">${msg.name || '名無し'}</span>
+                  <span class="text-[9px] bg-slate-800 px-1 py-0.2 rounded text-amber-400 font-mono">Lv.${msg.level || 1}</span>
+                </div>
+                <div class="p-2 rounded-xl text-xs leading-relaxed ${isMe ? 'bg-teal-700 text-white rounded-tr-none' : 'bg-slate-800 text-gray-200 border border-slate-700 rounded-tl-none'} shadow">
+                  ${escapeHTML(msg.text || '')}
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        container.scrollTop = container.scrollHeight;
+      }, (error) => {
+        console.error("チャット取得エラー:", error);
+        container.innerHTML = `<div class="text-center py-8 text-xs text-red-400">チャットの取得に失敗しました</div>`;
+      });
+    }
+
+    // チャット送信
+    async function sendChatMessage() {
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text || !window.db) return;
+
+      input.value = '';
+      try {
+        const { collection, addDoc, serverTimestamp } = window.dbMethods;
+        await addDoc(collection(window.db, "messages"), {
+          userId: getPlayerId(),
+          name: state.playerName,
+          level: state.level,
+          spiritEvolved: state.spiritEvolved,
+          text: text,
+          createdAt: serverTimestamp()
+        });
+      } catch (e) {
+        console.error("メッセージ送信エラー:", e);
+      }
+    }
+
+    function escapeHTML(str) {
+      return str.replace(/[&<>'"]/g, 
+        tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+      );
+    }
+
+    // ランキング取得
+    async function openRankingModal() {
+      openModal('ranking-modal');
+      const container = document.getElementById('ranking-list-container');
+      container.innerHTML = `<div class="text-center py-8 text-xs text-gray-500 animate-pulse">ランキングを読み込み中...</div>`;
+
+      await submitScoreToFirebase();
+
+      if (!window.db) {
+        renderFallbackRanking(container);
+        return;
+      }
+
+      try {
+        const { collection, query, orderBy, limit, getDocs } = window.dbMethods;
+        const q = query(collection(window.db, "rankings"), orderBy("level", "desc"), limit(20));
+        const querySnapshot = await getDocs(q);
+
+        let rankingData = [];
+        querySnapshot.forEach((docSnap) => {
+          rankingData.push({ id: docSnap.id, ...docSnap.data() });
+        });
+
+        const myId = getPlayerId();
+        if (!rankingData.some(d => d.id === myId)) {
+          const discoveredKeys = Object.keys(state.discovered).filter(k => state.discovered[k]);
+          rankingData.push({
+            id: myId,
+            userId: myId,
+            name: state.playerName,
+            level: state.level,
+            exp: state.exp,
+            rank: getAlchemistRank(discoveredKeys.length),
+            showcase: state.showcase || [],
+            spiritEvolved: state.spiritEvolved
+          });
+        }
+
+        rankingData.sort((a, b) => {
+          if (b.level !== a.level) return b.level - a.level;
+          return (b.exp || 0) - (a.exp || 0);
+        });
+
+        renderRankingHTML(container, rankingData);
+      } catch (e) {
+        console.error("ランキング取得エラー:", e);
+        renderFallbackRanking(container);
+      }
+    }
+
+    function renderFallbackRanking(container) {
+      const myId = getPlayerId();
+      const discoveredKeys = Object.keys(state.discovered).filter(k => state.discovered[k]);
+      const myData = [{
+        id: myId,
+        userId: myId,
+        name: state.playerName,
+        level: state.level,
+        exp: state.exp,
+        rank: getAlchemistRank(discoveredKeys.length),
+        showcase: state.showcase || [],
+        spiritEvolved: state.spiritEvolved
+      }];
+      renderRankingHTML(container, myData);
+    }
+
+    function renderRankingHTML(container, list) {
+      if (list.length === 0) {
+        container.innerHTML = `<div class="text-center py-8 text-xs text-gray-500">まだランキングデータがありません</div>`;
+        return;
+      }
+
+      const myId = getPlayerId();
+      let html = "";
+      let rank = 1;
+
+      list.forEach((data) => {
+        const targetUserId = data.userId || data.id;
+        const isMe = targetUserId === myId;
+        
+        let rankBadge = `<span class="w-6 text-center font-bold text-gray-400">${rank}位</span>`;
+        if (rank === 1) rankBadge = `<span class="w-6 text-center font-bold text-yellow-400">🥇1位</span>`;
+        else if (rank === 2) rankBadge = `<span class="w-6 text-center font-bold text-slate-300">🥈2位</span>`;
+        else if (rank === 3) rankBadge = `<span class="w-6 text-center font-bold text-amber-600">🥉3位</span>`;
+
+        const spiritImgSrc = data.spiritEvolved ? '精霊2.png' : '精霊.png';
+
+        html += `
+          <div class="flex items-center justify-between p-2 rounded-xl border ${isMe ? 'bg-indigo-950/60 border-indigo-500/60' : 'bg-slate-800/80 border-slate-700/60'}">
+            <div class="flex items-center space-x-2.5 min-w-0">
+              ${rankBadge}
+              <div onclick="openOtherProfile('${targetUserId}')" class="w-9 h-9 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center overflow-hidden shrink-0 cursor-pointer hover:opacity-80 transition">
+                <img src="${spiritImgSrc}" alt="精霊" class="w-7 h-7 object-contain">
+              </div>
+              <div class="min-w-0 cursor-pointer" onclick="openOtherProfile('${targetUserId}')">
+                <div class="text-xs font-bold text-gray-200 truncate hover:underline">${data.name || '名無しの錬金術士'} ${isMe ? '<span class="text-[10px] text-indigo-400 font-normal">(自分)</span>' : ''}</div>
+                <div class="text-[10px] text-gray-400">EXP: ${data.exp || 0}</div>
+              </div>
+            </div>
+            <span class="text-xs font-mono font-bold text-amber-400 bg-amber-950/60 px-2.5 py-1 rounded border border-amber-800/40 shrink-0">Lv. ${data.level || 1}</span>
+          </div>
+        `;
+        rank++;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function initBGM() {
+      if (!bgmAudio) bgmAudio = document.getElementById('bgm-audio');
+    }
+
+    function startBGM() {
+      initBGM();
+      if (!bgmAudio) return;
+      bgmAudio.play().then(() => {
+        bgmIsPlaying = true;
+        updateBGMButtonUI();
+      }).catch(err => {
+        bgmIsPlaying = false;
+        updateBGMButtonUI();
+      });
+    }
+
+    function stopBGM() {
+      if (bgmAudio) bgmAudio.pause();
+      bgmIsPlaying = false;
+      updateBGMButtonUI();
+    }
+
+    function toggleBGM() {
+      if (bgmIsPlaying) stopBGM();
+      else startBGM();
+    }
+
+    function updateBGMButtonUI() {
+      const btn = document.getElementById('bgm-toggle-btn');
+      const icon = document.getElementById('bgm-icon');
+      const text = document.getElementById('bgm-text');
+      if (bgmIsPlaying) {
+        btn.className = "text-[10px] bg-emerald-700 hover:bg-emerald-600 text-emerald-100 px-2 py-1 rounded-lg border border-emerald-400/40 flex items-center gap-1 transition font-bold shadow-md animate-pulse shrink-0";
+        icon.className = "fa-solid fa-volume-high";
+        text.textContent = "BGM ON";
+      } else {
+        btn.className = "text-[10px] bg-slate-800 hover:bg-slate-700 text-gray-400 px-2 py-1 rounded-lg border border-slate-700 flex items-center gap-1 transition font-bold shrink-0";
+        icon.className = "fa-solid fa-volume-xmark";
+        text.textContent = "BGM OFF";
+      }
+    }
+
+    function handleFirstInteraction() {
+      if (!bgmIsPlaying) startBGM();
+      window.removeEventListener('click', handleFirstInteraction);
+      window.removeEventListener('touchstart', handleFirstInteraction);
+    }
+
+    window.addEventListener('click', handleFirstInteraction);
+    window.addEventListener('touchstart', handleFirstInteraction);
+
+    const ALCHEMIST_RANKS = [
+      { count: 100000, title: 'ヨミガエリ' },
+      { count: 50000,  title: 'ダークマターⅤ' },
+      { count: 30000,  title: 'ダークマターⅣ' },
+      { count: 10000,  title: 'ダークマターⅢ' },
+      { count: 5000,   title: 'ダークマターⅡ' },
+      { count: 2000,   title: 'ダークマター' },
+      { count: 1000,   title: '生ケル伝説' },
+      { count: 500,    title: '全知ノ錬金術師' },
+      { count: 200,    title: '世ヲ統ベル魔力' },
+      { count: 160,    title: '神殺シノ魔力' },
+      { count: 120,    title: '禁忌ノ魔力' },
+      { count: 85,     title: '英雄の友' },
+      { count: 60,     title: '伝説の錬金術師' },
+      { count: 40,     title: '勇者の友' },
+      { count: 30,     title: '錬金術師' },
+      { count: 18,     title: '生粋の錬金術師' },
+      { count: 10,     title: '上級錬金術師' },
+      { count: 5,      title: '中級錬金術師' },
+      { count: 0,      title: '見習い錬金術師' }
+    ];
+
+    function getAlchemistRank(discoveredCount) {
+      for (const rank of ALCHEMIST_RANKS) {
+        if (discoveredCount >= rank.count) return rank.title;
+      }
+      return '見習い錬金術士';
+    }
+
+    const ITEMS = {
+      weed: { id: 'weed', name: '雑草', icon: '🌿', image: '雑草.png', desc: 'その辺に生えているどこにでもある草。', dropRate: 30.0 },
+      hay: { id: 'hay', name: '干草', icon: '🌾', image: '干草.png', desc: '乾燥させた草。燃えやすい。', dropRate: 30.0 },
+      stone: { id: 'stone', name: '石', icon: '🪨', image: '石.png', desc: '硬い小石。加工の基本。', dropRate: 20.0 },
+      bear_shroom: { id: 'bear_shroom', name: 'クマキノコ', icon: '🍄', image: 'クマキノコ.png', desc: 'クマの手のひらに似た旨味のある茸。', dropRate: 10.0 },
+      crystal: { id: 'crystal', name: '水晶', icon: '💎', image: '水晶.png', desc: '澄み渡った美しい鉱石。魔力を秘める。', dropRate: 5.0 },
+      herb: { id: 'herb', name: '薬草', icon: '🌱', image: '薬草.png', desc: 'かすかに爽やかな香りがする薬用植物。', dropRate: 3.0 },
+      fire_shroom: { id: 'fire_shroom', name: '火炎茸', icon: '🔥', image: '火炎茸.png', desc: '熱気を帯びた危険なキノコ。', dropRate: 1.0 },
+      ryugu_stone: { id: 'ryugu_stone', name: '竜宮石', icon: '🌊', image: '竜宮ノ奇石.png', desc: '深海から打ち上げられたとされる伝説の石。', dropRate: 0.5 },
+      angel_feather: { id: 'angel_feather', name: '天使ノ羽', icon: '🪶', image: '天使の羽.png', desc: '神秘的な光を放つ非常に稀少な羽。', dropRate: 0.5 },
+
+      water_drop: { id: 'water_drop', name: '水', icon: '💧', image: '水.png', desc: '清らかな水。' },
+      iron_ore: { id: 'iron_ore', name: '鉄', icon: '⚙️', image: '鉄.png', desc: '頑丈な金属の塊。' },
+      goblin_blood: { id: 'goblin_blood', name: 'ゴブリンの血', icon: '🩸', image: 'ゴブリンの血.png', desc: '赤黒い悪魔的な液体。' },
+      dragon_fang: { id: 'dragon_fang', name: 'ドラゴンの牙', icon: '🦴', image: 'ドラゴンの牙.png', desc: '古代竜の極めて強靭な牙。' },
+      meteorite: { id: 'meteorite', name: '隕石', icon: '☄️', image: '隕石.png', desc: '宇宙から飛来した天体物質。' },
+      unmelting_ice: { id: 'unmelting_ice', name: '溶けない氷', icon: '🧊', desc: '絶対零度の溶けない氷。' },
+      phoenix_feather: { id: 'phoenix_feather', name: '不死鳥の羽', icon: '🪶', desc: '炎を宿し続ける神聖な羽。' },
+      poison_shroom: { id: 'poison_shroom', name: '毒キノコ', icon: '🟣', image: '毒キノコ.png', desc: '見るからに怪しい紫色のキノコ。' },
+      coal: { id: 'coal', name: '炭', icon: '⬛', image: '炭.png', desc: '調合失敗の産物。' },
+      kagami_stone: { id: 'kagami_stone', name: '鏡石', icon: '🪞', image: '鏡石.png', desc: '表面が鏡のように滑らかな輝く石。' },
+      koke: { id: 'koke', name: 'コケ', icon: '🟢', desc: 'しっとりとした生命力溢れる青苔。' },
+      umi_kiseki: { id: 'umi_kiseki', name: '海ノ奇石', icon: '🔮', desc: '海の静寂を閉じ込めたような鉱石。' },
+      miyabi_grass: { id: 'miyabi_grass', name: '雅草', icon: '✨', desc: '優雅な香りを放つ最高級の調合ハーブ。' },
+      iwa: { id: 'iwa', name: '岩', icon: '🧱', desc: '石が強く結合してできた大きな固まり。' },
+      daku_iwa: { id: 'daku_iwa', name: '濁岩', icon: '🗿', desc: '濁った魔力を帯びた重厚な岩石。' },
+      star_dew: { id: 'star_dew', name: '星ノしずく', icon: '💧', desc: '夜空の星屑が溶けだしたような聖なる液体。' },
+      dragon_scale: { id: 'dragon_scale', name: '竜の鱗', icon: '🛡️', desc: '圧倒的な硬度を誇る竜の装甲。' },
+      dark_ore: { id: 'dark_ore', name: '闇の鉱石', icon: '🖤', desc: '周囲の光を吸い込む混沌の鉱石。' },
+      elixir: { id: 'elixir', name: '万能薬エリクサー', icon: '🧪', desc: 'あらゆる物質の極致。伝説の秘薬。' },
+      phoenix_ash: { id: 'phoenix_ash', name: '不死鳥の灰', icon: '✨', desc: '微かな温もりを放つ灰。' },
+      magic_mirror: { id: 'magic_mirror', name: '真実の魔鏡', icon: '🪞', desc: '世界の理を映し出す魔鏡。' },
+      beast_fang: { id: 'beast_fang', name: '魔獣の牙', icon: '🦷', desc: '鋭い野性の牙。' },
+      orc_skin: { id: 'orc_skin', name: 'オークの皮', icon: '🛡️', desc: '分厚く頑丈なモンスターの皮革。' },
+      slime_core: { id: 'slime_core', name: 'スライムの核', icon: '🟢', desc: '魔力を宿す弾力の核。' },
+      dark_orb: { id: 'dark_orb', name: '闇のオーブ', icon: '🔮', desc: '黒い光を放つ球体。' },
+      fairy_tears: { id: 'fairy_tears', name: '妖精の涙', icon: '💧', desc: '清らかな癒やしの水滴。' },
+      mithril: { id: 'mithril', name: 'ミスリル鉱', icon: '🪙', desc: '強靭な幻の銀白金属。' },
+      world_branch: { id: 'world_branch', name: '世界樹の枝', icon: '🌿', desc: '生命エネルギーを湛えた神木の枝。' },
+      philosopher_shard: { id: 'philosopher_shard', name: '賢者の石の欠片', icon: '✨', desc: '奇跡の鉱石の破片。' },
+      mud: { id: 'mud', name: '泥', icon: '💩', desc: '湿った泥土。' },
+      oxygen: { id: 'oxygen', name: '酸素', icon: '🫧', desc: '見えざる気体。' },
+      ash: { id: 'ash', name: '灰', icon: '🌫️', desc: '燃えカス。' },
+      magma: { id: 'magma', name: 'マグマ', icon: '🌋', desc: '煮えたぎる岩漿。' },
+      dragon_heart: { id: 'dragon_heart', name: '竜の心臓', icon: '🫀', desc: '脈動を続ける生命力の源泉。' },
+      cosmic_dust: { id: 'cosmic_dust', name: '星屑の塵', icon: '✨', desc: '無数の星々のかけら。' },
+      absolute_zero_crystal: { id: 'absolute_zero_crystal', name: '絶対零度の結晶', icon: '❄️', desc: '究極の冷気塊。' },
+
+      devil_blood: { id: 'devil_blood', name: '悪魔の血', icon: '🩸', desc: '禍々しい波動を放つ冷酷な血液。' },
+      hydrogen: { id: 'hydrogen', name: '水素', icon: '🫧', desc: '軽やかで燃えやすい気体元素。' },
+      gold: { id: 'gold', name: '金', icon: '🪙', desc: 'まばゆい黄金の輝きを放つ貴金属。' },
+      copper: { id: 'copper', name: '銅', icon: '⚙️', desc: '赤みがかった美しい導電金属。' },
+      magatama: { id: 'magatama', name: 'マガタマ', icon: '📿', desc: '古代の神秘的な勾玉。' },
+      paper: { id: 'paper', name: '紙', icon: '📜', desc: '文字や術式を記すための薄い植物繊維。' },
+      mystery_book: { id: 'mystery_book', name: '謎の本', icon: '📖', desc: '開くことのできない不気味な古文書。' },
+      magic_shard: { id: 'magic_shard', name: '魔力の欠片', icon: '✨', desc: '結晶化した純粋なマナの破片。' },
+      salt: { id: 'salt', name: '塩', icon: '🧂', desc: '清めと保存の力を秘めた白い結晶。' },
+      eyeball: { id: 'eyeball', name: '目玉', icon: '👁️', desc: 'すべてを見通すかのような奇妙な眼球。' },
+      orc_hand: { id: 'orc_hand', name: 'オーガの手', icon: '✊', desc: '圧倒的な怪力を誇る魔物の腕。' },
+      rat_blood: { id: 'rat_blood', name: '鼠の血', icon: '🩸', desc: '素早さを引き出す小さな獣の血。' },
+      cat_fang: { id: 'cat_fang', name: '猫の牙', icon: '🦷', desc: '鋭くしなやかな魔獣の牙。' },
+      poseidon_spear: { id: 'poseidon_spear', name: 'ポセイドンの槍', icon: '🔱', desc: '荒れ狂う海原の神威が宿る三叉槍。' },
+      soul: { id: 'soul', name: '霊魂', icon: '👻', desc: '肉体を失い漂う儚い魂のゆらぎ。' },
+      elem_light: { id: 'elem_light', name: '光元素', icon: '🌟', desc: '眩い光を形作った純粋な元素。' },
+      elem_wind: { id: 'elem_wind', name: '風元素', icon: '🍃', desc: '自由奔放に吹き抜ける風の元素。' },
+      elem_fire: { id: 'elem_fire', name: '火元素', icon: '🔥', desc: '激しく燃え盛る炎の元素。' },
+      elem_water: { id: 'elem_water', name: '水元素', icon: '💧', desc: 'すべてを包み込む潤いの元素。' },
+      elem_dark: { id: 'elem_dark', name: '闇元素', icon: '🖤', desc: 'あらゆる光を飲み込む深淵の元素。' },
+      elem_ultimate: { id: 'elem_ultimate', name: '万能なる元素', icon: '🌌', desc: 'すべての理を内包する究極の元素。' },
+      mystic_liquid: { id: 'mystic_liquid', name: '神秘的な液体', icon: '🧪', desc: '怪しく発光する未知の配合液。' },
+      rainbow_liquid: { id: 'rainbow_liquid', name: '虹色の液体', icon: '🌈', desc: '見る角度で色を変える美しい液体。' },
+      unmelting_snow: { id: 'unmelting_snow', name: '溶けない雪の結晶', icon: '❄️', desc: '常温でも決して形を失わない氷雪。' },
+      bat_dung: { id: 'bat_dung', name: 'コウモリの糞', icon: '💩', desc: '暗い洞窟に棲む獣の排泄物。' },
+      angel_ring: { id: 'angel_ring', name: '天使ノ輪', icon: '😇', desc: '聖なる光輪。神聖な加護を授ける。' },
+      wheel_urn: { id: 'wheel_urn', name: '輪廻ノ壺', icon: '🏺', desc: '生と死のサイクルを司る神秘の壺。' },
+// ------------------ 【新規追加アイテム】 ------------------
+      // 指定アイテム
+      sunflower: { id: 'sunflower', name: 'ヒマワリ', icon: '🌻', desc: '太陽の光をたっぷり浴びた大輪の花。' },
+      giant_finger: { id: 'giant_finger', name: '巨人の指', icon: '🖐️', desc: '太古の巨人の指骨。強大な力が宿る。' },
+      cactus: { id: 'cactus', name: 'サボテン', icon: '🌵', desc: '砂漠の過酷な環境に耐える刺々しい植物。' },
+      power_orb: { id: 'power_orb', name: '力のオーブ', icon: '🔮', desc: '真紅に煌めく怪力が秘められた宝珠。' },
+      gold_ingot: { id: 'gold_ingot', name: '金塊', icon: '🧈', desc: '精錬された純金の塊。圧倒的な価値を持つ。' },
+      chimera_heart: { id: 'chimera_heart', name: 'キメラの心臓', icon: '🫀', desc: '複数の魔獣の生命力が混ざり合った心臓。' },
+      mana_clock: { id: 'mana_clock', name: '魔力の籠った時計', icon: '🕰️', desc: '刻を狂わせる怪しい魔力を放つ古時計。' },
+
+      // おまかせ追加アイテム（レシピ成立用）
+      sun_stone: { id: 'sun_stone', name: '太陽石', icon: '☀️', desc: 'ヒマワリの熱エネルギーが凝縮された陽光石。' },
+      desert_rose: { id: 'desert_rose', name: '砂漠のバラ', icon: '🌹', desc: '乾燥した砂漠の奇跡が生んだ結晶。' },
+      titan_golem: { id: 'titan_golem', name: '巨人のコア', icon: '🗿', desc: '巨人の力を動かす高密度の核。' },
+      king_crown: { id: 'king_crown', name: '覇王の王冠', icon: '👑', desc: '金塊と魔力を注ぎ込んで作られた伝説の冠。' },
+      time_sand: { id: 'time_sand', name: '時砂', icon: '⏳', desc: '時計から溢れ出た過去と未来の砂。' },
+      mythic_beast_horn: { id: 'mythic_beast_horn', name: '幻獣の角', icon: '🦄', desc: 'キメラの心臓が解き放った幻獣の角。' },
+mossy_stone: { id: 'mossy_stone', name: '苔むした石', icon: '🪨', desc: '緑の苔に覆われた趣のある石。' },
+      rag: { id: 'rag', name: 'ボロ布', icon: '🧶', desc: '植物の繊維から作られた粗い布切れ。' },
+      shroom_powder: { id: 'shroom_powder', name: 'キノコパウダー', icon: '🍄', desc: '旨味が凝縮されたキノコの粉末。' },
+      glass_marble: { id: 'glass_marble', name: '輝くガラス玉', icon: '🔮', desc: '光を綺麗に通す透明なガラスの玉。' },
+      herb_tea: { id: 'herb_tea', name: '爽快ハーブティー', icon: '🍵', desc: '飲むと心身がすっきりする癒やしのお茶。' },
+      dragon_powder: { id: 'dragon_powder', name: '竜の鱗粉', icon: '✨', desc: '淡く輝く神秘的な超微粒子パウダー。' },
+ancient_monument: { id: 'ancient_monument', name: '古代の石碑', icon: '🏛️', desc: '古代の知恵や歴史が刻まれた重厚な石碑。' },
+      magic_robe: { id: 'magic_robe', name: '魔法の仕立て服', icon: '👘', desc: '魔力への耐性と軽さを両立した上質な衣服。' },
+      ultimate_soup: { id: 'ultimate_soup', name: '究極キノコスープ', icon: '🍲', desc: '飲むだけで全身に力がみなぎる絶品スープ。' },
+      sage_crystal_ball: { id: 'sage_crystal_ball', name: '賢者の水晶玉', icon: '🔮', desc: '世界の真理や未来を映し出す魔導の球体。' },
+      nature_tea: { id: 'nature_tea', name: '大自然の恵み茶', icon: '🍵', desc: '大地と太陽のエネルギーが凝縮された特製茶。' },
+      dragon_god_jewel: { id: 'dragon_god_jewel', name: '竜神の宝玉', icon: '🐉', desc: '竜の神々しい加護を宿した究極の宝石。' },
+// ------------------ 【ポーション系アイテム】 ------------------
+      minor_potion: { id: 'minor_potion', name: '小さな回復薬', icon: '🧪', desc: '傷を少しだけ癒やす基本のポーション。' },
+      high_potion: { id: 'high_potion', name: '上級回復薬', icon: '🧪', desc: '深い傷も一瞬で癒やす濃縮された回復薬。' },
+      mana_potion: { id: 'mana_potion', name: '魔力ポーション', icon: '🔷', desc: '澄んだ魔力を補給するための青い薬液。' },
+      stamina_drink: { id: 'stamina_drink', name: 'スタミナドリンク', icon: '⚡', desc: '疲れを吹き飛ばす刺激的な活力飲料。' },
+      antidote: { id: 'antidote', name: '解毒薬', icon: '🟢', desc: '体内の毒素を中和して体調を整える薬。' },
+      flame_potion: { id: 'flame_potion', name: '火炎のポーション', icon: '🔥', desc: '飲むと体が熱くなり火への耐性を得る薬。' },
+      frost_potion: { id: 'frost_potion', name: '氷結のポーション', icon: '❄️', desc: '冷気を全身に纏う、凍てつくような薬。' },
+      gale_potion: { id: 'gale_potion', name: '疾風のポーション', icon: '🌪️', desc: '身体が羽のように軽くなる素早さ強化薬。' },
+      deadly_poison: { id: 'deadly_poison', name: '猛毒のポーション', icon: '☠️', desc: '劇薬。取扱注意の禍々しい毒液。' },
+      night_vision_potion: { id: 'night_vision_potion', name: '暗視のポーション', icon: '👁️', desc: '暗闇でも一すじの光を捉えられる薬。' },
+      invisibility_potion: { id: 'invisibility_potion', name: '透明化のポーション', icon: '👻', desc: '光を透過して姿が見えなくなる幻の薬。' },
+      strength_potion: { id: 'strength_potion', name: '筋力強化のポーション', icon: '💪', desc: '爆発的な腕力を手に入れる強壮薬。' },
+      iron_skin_potion: { id: 'iron_skin_potion', name: '硬化のポーション', icon: '🛡️', desc: '肌が皮膚のように頑丈になる防御薬。' },
+      fortune_potion: { id: 'fortune_potion', name: '幸運のポーション', icon: '🍀', desc: '幸運が舞い込むとされる秘薬。' },
+      youth_potion: { id: 'youth_potion', name: '若返りのポーション', icon: '✨', desc: '過去の時間を巻き戻す神秘の薬。' },
+      sun_potion: { id: 'sun_potion', name: '太陽のポーション', icon: '☀️', desc: '陽光のエッセンスを詰めた明るい薬。' },
+      ocean_potion: { id: 'ocean_potion', name: '深海のポーション', icon: '🌊', desc: '水中での呼吸と行動を可能にする薬。' },
+      berserk_potion: { id: 'berserk_potion', name: '狂乱のポーション', icon: '🩸', desc: '理性と引き換えに魔力を得る危険な薬。' },
+      wisdom_potion: { id: 'wisdom_potion', name: '賢者のポーション', icon: '📖', desc: '頭脳が冴えわたる最高峰の薬。' },
+      omega_elixir: { id: 'omega_elixir', name: '究極の万能薬', icon: '🌌', desc: 'あらゆる病や呪いを消し去る究極の薬。' }
+    };
+
+    function getItemIconHTML(item, sizeClass = "w-6 h-6", textClass = "text-xl") {
+      if (item && item.image) {
+        return `<img src="${item.image}" alt="${item.name}" class="item-img-icon ${sizeClass}">`;
+      }
+      return `<span class="${textClass}">${item ? item.icon : '❓'}</span>`;
+    }
+
+    const DROP_TABLE = Object.values(ITEMS).filter(item => item.dropRate > 0);
+
+    const RECIPES = [
+      { materials: ['weed', 'weed', 'stone', 'stone'], result: 'kagami_stone' },
+      { materials: ['hay', 'weed', 'bear_shroom'], result: 'stone' },
+      { materials: ['weed', 'weed', 'weed'], result: 'hay' },
+      { materials: ['hay', 'hay', 'hay', 'hay', 'crystal'], result: 'koke' },
+      { materials: ['kagami_stone', 'stone', 'stone', 'stone'], result: 'umi_kiseki' },
+      { materials: ['herb', 'weed', 'hay', 'bear_shroom', 'bear_shroom'], result: 'miyabi_grass' },
+      { materials: ['stone', 'stone', 'stone', 'stone', 'stone'], result: 'iwa' },
+      { materials: ['iwa', 'crystal'], result: 'daku_iwa' },
+      { materials: ['fire_shroom', 'weed'], result: 'poison_shroom' },
+      { materials: ['crystal', 'angel_feather'], result: 'star_dew' },
+      { materials: ['daku_iwa', 'ryugu_stone'], result: 'dragon_scale' },
+      { materials: ['coal', 'crystal', 'poison_shroom'], result: 'dark_ore' },
+      { materials: ['miyabi_grass', 'star_dew', 'angel_feather', 'ryugu_stone'], result: 'elixir' },
+      { materials: ['fire_shroom', 'angel_feather'], result: 'phoenix_ash' },
+      { materials: ['kagami_stone', 'umi_kiseki', 'star_dew'], result: 'magic_mirror' },
+
+      { materials: ['weed', 'weed', 'weed', 'weed', 'weed'], result: 'water_drop' },
+      { materials: ['stone', 'stone', 'stone', 'stone', 'hay'], result: 'iron_ore' },
+      { materials: ['poison_shroom', 'bear_shroom', 'stone', 'stone', 'weed'], result: 'goblin_blood' },
+      { materials: ['dragon_scale', 'stone', 'stone', 'stone', 'stone'], result: 'dragon_fang' },
+      { materials: ['star_dew', 'crystal', 'crystal', 'stone', 'stone'], result: 'meteorite' },
+      { materials: ['water_drop', 'crystal', 'crystal', 'stone', 'stone'], result: 'unmelting_ice' },
+      { materials: ['angel_feather', 'fire_shroom', 'fire_shroom', 'hay', 'hay'], result: 'phoenix_feather' },
+
+      { materials: ['stone', 'stone', 'weed', 'weed', 'hay'], result: 'mud' },
+      { materials: ['hay', 'hay', 'hay', 'fire_shroom', 'fire_shroom'], result: 'ash' },
+      { materials: ['stone', 'stone', 'iwa', 'fire_shroom', 'fire_shroom'], result: 'magma' },
+      { materials: ['dragon_fang', 'dragon_scale', 'goblin_blood', 'fire_shroom', 'elixir'], result: 'dragon_heart' },
+      { materials: ['meteorite', 'meteorite', 'star_dew', 'crystal', 'dark_ore'], result: 'cosmic_dust' },
+      { materials: ['unmelting_ice', 'unmelting_ice', 'crystal', 'ryugu_stone', 'stone'], result: 'absolute_zero_crystal' },
+
+      { materials: ['goblin_blood', 'poison_shroom', 'stone'], result: 'devil_blood' },
+      { materials: ['water_drop', 'fire_shroom', 'hay'], result: 'hydrogen' },
+      { materials: ['iron_ore', 'crystal', 'stone', 'stone'], result: 'gold' },
+      { materials: ['iron_ore', 'stone', 'stone'], result: 'copper' },
+      { materials: ['stone', 'kagami_stone', 'umi_kiseki'], result: 'magatama' },
+      { materials: ['weed', 'weed', 'hay', 'water_drop'], result: 'paper' },
+      { materials: ['paper', 'paper', 'leather', 'dark_ore'], result: 'mystery_book' },
+      { materials: ['crystal', 'star_dew', 'angel_feather'], result: 'magic_shard' },
+      { materials: ['water_drop', 'stone', 'stone'], result: 'salt' },
+      { materials: ['goblin_blood', 'crystal', 'stone'], result: 'eyeball' },
+      { materials: ['orc_skin', 'stone', 'stone', 'iwa'], result: 'orc_hand' },
+      { materials: ['weed', 'hay', 'goblin_blood'], result: 'rat_blood' },
+      { materials: ['beast_fang', 'beast_fang', 'stone'], result: 'cat_fang' },
+      { materials: ['ryugu_stone', 'umi_kiseki', 'iron_ore', 'water_drop'], result: 'poseidon_spear' },
+      { materials: ['dark_ore', 'angel_feather', 'fairy_tears'], result: 'soul' },
+      { materials: ['star_dew', 'crystal', 'fire_shroom'], result: 'elem_light' },
+      { materials: ['feather', 'angel_feather', 'weed'], result: 'elem_wind' },
+      { materials: ['fire_shroom', 'magma', 'coal'], result: 'elem_fire' },
+      { materials: ['water_drop', 'unmelting_ice', 'fairy_tears'], result: 'elem_water' },
+      { materials: ['dark_ore', 'goblin_blood', 'poison_shroom'], result: 'elem_dark' },
+      { materials: ['elem_light', 'elem_wind', 'elem_fire', 'elem_water', 'elem_dark'], result: 'elem_ultimate' },
+      { materials: ['water_drop', 'herb', 'poison_shroom', 'fairy_tears'], result: 'mystic_liquid' },
+      { materials: ['star_dew', 'crystal', 'angel_feather', 'elixir'], result: 'rainbow_liquid' },
+      { materials: ['unmelting_ice', 'absolute_zero_crystal', 'crystal'], result: 'unmelting_snow' },
+      { materials: ['weed', 'mud', 'ash'], result: 'bat_dung' },
+      { materials: ['angel_feather', 'star_dew', 'gold', 'elixir'], result: 'angel_ring' },
+      { materials: ['magic_mirror', 'elixir', 'dragon_heart', 'cosmic_dust'], result: 'wheel_urn' },
+// ------------------ 【新規追加レシピ】 ------------------
+      // 指定アイテムの調合
+      { materials: ['weed', 'weed', 'star_dew', 'herb'], result: 'sunflower' },                          // 雑草×2, 星ノしずく, 薬草 -> ヒマワリ
+      { materials: ['beast_fang', 'iwa', 'goblin_blood', 'orc_skin'], result: 'giant_finger' },         // 魔獣の牙, 岩, ゴブリンの血, オークの皮 -> 巨人の指
+      { materials: ['weed', 'hay', 'water_drop'], result: 'cactus' },                                   // 雑草, 干草, 水 -> サボテン
+      { materials: ['crystal', 'elem_fire', 'goblin_blood'], result: 'power_orb' },                     // 水晶, 火元素, ゴブリンの血 -> 力のオーブ
+      { materials: ['gold', 'gold', 'gold', 'fire_shroom'], result: 'gold_ingot' },                    // 金×3, 火炎茸 -> 金塊
+      { materials: ['beast_fang', 'dragon_heart', 'devil_blood'], result: 'chimera_heart' },            // 魔獣の牙, 竜の心臓, 悪魔の血 -> キメラの心臓
+      { materials: ['iron_ore', 'magic_shard', 'magic_mirror'], result: 'mana_clock' },                 // 鉄, 魔力の欠片, 真実の魔鏡 -> 魔力の籠った時計
+
+      // おまかせアイテム＆応用調合
+      { materials: ['sunflower', 'fire_shroom', 'star_dew'], result: 'sun_stone' },                     // ヒマワリ, 火炎茸, 星ノしずく -> 太陽石
+      { materials: ['cactus', 'umi_kiseki'], result: 'desert_rose' },                                   // サボテン, 海ノ奇石 -> 砂漠のバラ
+      { materials: ['giant_finger', 'power_orb', 'daku_iwa'], result: 'titan_golem' },                 // 巨人の指, 〇のオーブ, 濁岩 -> 巨人のコア
+      { materials: ['gold_ingot', 'gold_ingot', 'angel_ring', 'elem_light'], result: 'king_crown' },   // 金塊×2, 天使ノ輪, 光元素 -> 覇王の王冠
+      { materials: ['mana_clock', 'cosmic_dust'], result: 'time_sand' },                                // 魔力の籠った時計, 星屑の塵 -> 時砂
+      { materials: ['chimera_heart', 'phoenix_feather', 'dragon_scale'], result: 'mythic_beast_horn' }, // キメラの心臓, 不死鳥の羽, 竜の鱗 -> 幻獣の角
+{ materials: ['weed', 'stone', 'stone'], result: 'mossy_stone' },
+      { materials: ['hay', 'hay', 'weed'], result: 'rag' },
+      { materials: ['bear_shroom', 'bear_shroom', 'stone'], result: 'shroom_powder' },
+      { materials: ['crystal', 'fire_shroom', 'stone'], result: 'glass_marble' },
+      { materials: ['herb', 'crystal', 'weed'], result: 'herb_tea' },
+      { materials: ['ryugu_stone', 'angel_feather', 'fire_shroom'], result: 'dragon_powder' },
+{ materials: ['mossy_stone', 'giant_finger', 'paper', 'mystery_book'], result: 'ancient_monument' },
+      { materials: ['rag', 'angel_feather', 'magic_shard', 'gold'], result: 'magic_robe' },
+      { materials: ['shroom_powder', 'bear_shroom', 'water_drop', 'salt', 'herb_tea'], result: 'ultimate_soup' },
+      { materials: ['glass_marble', 'power_orb', 'magic_mirror', 'star_dew'], result: 'sage_crystal_ball' },
+      { materials: ['herb_tea', 'sunflower', 'cactus', 'herb'], result: 'nature_tea' },
+      { materials: ['dragon_powder', 'chimera_heart', 'ryugu_stone', 'gold_ingot'], result: 'dragon_god_jewel' },
+// ------------------ 【ポーション系レシピ】 ------------------
+      { materials: ['herb', 'water_drop', 'weed'], result: 'minor_potion' },
+      { materials: ['herb', 'herb', 'star_dew', 'herb_tea'], result: 'high_potion' },
+      { materials: ['crystal', 'water_drop', 'magic_shard'], result: 'mana_potion' },
+      { materials: ['bear_shroom', 'fire_shroom', 'herb_tea'], result: 'stamina_drink' },
+      { materials: ['herb', 'poison_shroom', 'salt'], result: 'antidote' },
+      { materials: ['fire_shroom', 'elem_fire', 'magma'], result: 'flame_potion' },
+      { materials: ['unmelting_ice', 'elem_water', 'unmelting_snow'], result: 'frost_potion' },
+      { materials: ['elem_wind', 'angel_feather', 'rat_blood'], result: 'gale_potion' },
+      { materials: ['poison_shroom', 'goblin_blood', 'devil_blood', 'bat_dung'], result: 'deadly_poison' },
+      { materials: ['eyeball', 'elem_light', 'crystal'], result: 'night_vision_potion' },
+      { materials: ['soul', 'oxygen', 'rainbow_liquid'], result: 'invisibility_potion' },
+      { materials: ['power_orb', 'giant_finger', 'shroom_powder'], result: 'strength_potion' },
+      { materials: ['iron_ore', 'dragon_scale', 'orc_skin'], result: 'iron_skin_potion' },
+      { materials: ['star_dew', 'rainbow_liquid', 'angel_ring'], result: 'fortune_potion' },
+      { materials: ['time_sand', 'phoenix_ash', 'elixir'], result: 'youth_potion' },
+      { materials: ['sun_stone', 'sunflower', 'elem_light'], result: 'sun_potion' },
+      { materials: ['ryugu_stone', 'umi_kiseki', 'elem_water'], result: 'ocean_potion' },
+      { materials: ['chimera_heart', 'dark_orb', 'devil_blood'], result: 'berserk_potion' },
+      { materials: ['sage_crystal_ball', 'mystic_liquid', 'elem_ultimate'], result: 'wisdom_potion' },
+      { materials: ['elixir', 'dragon_god_jewel', 'wheel_urn'], result: 'omega_elixir' }
+    ];
+
+    let state = {
+      playerName: 'アトリエ主人',
+      level: 1,
+      exp: 0,
+      tapCount: 0,
+      inventory: { weed: 3, stone: 2, hay: 2 },
+      discovered: { weed: true, stone: true, hay: true },
+      showcase: [],
+      tutorialStep: 0,
+      spiritEvolved: false
+    };
+
+    let selectedSlots = [];
+    let lastUsedMaterials = [];
+
+    function getNextLevelExp(level) {
+      return 100 + (level - 1) * 80;
+    }
+
+    function saveGame() {
+      localStorage.setItem('alchemy_game_save_v7', JSON.stringify(state));
+    }
+
+    function loadGame() {
+      const saved = localStorage.getItem('alchemy_game_save_v7') || localStorage.getItem('alchemy_game_save_v6') || localStorage.getItem('alchemy_game_save_v5');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          state = { ...state, ...parsed };
+        } catch(e) {}
+      }
+      document.getElementById('player-name-input').value = state.playerName;
+
+      updateSpiritImages();
+      checkSpiritStartup();
+      updateUI();
+
+      setTimeout(submitScoreToFirebase, 1500);
+    }
+
+    function updateSpiritImages() {
+      const imgPath = state.spiritEvolved ? '精霊2.png' : '精霊.png';
+      document.getElementById('spirit-img-display').src = imgPath;
+      document.getElementById('feed-modal-spirit-img').src = imgPath;
+      document.getElementById('player-avatar-img').src = imgPath;
+    }
+
+    function checkSpiritStartup() {
+      const modal = document.getElementById('spirit-modal');
+      const dialogue = document.getElementById('spirit-dialogue');
+
+      if (state.tutorialStep === 0) {
+        dialogue.textContent = "錬金術の世界へようこそ♪まずは画面をタップして進めてね！";
+        modal.classList.remove('hidden');
+      } else if (state.tutorialStep === 2) {
+        dialogue.textContent = "おぉ！！安心しました～♪魔力がなかったらどうしようかと思いました！！";
+        modal.classList.remove('hidden');
+      } else {
+        state.tutorialStep = 3;
+        const greetings = ["おかえり～♪", "寂しかったよ・・・", "研究の時間だね！！"];
+        const randMsg = greetings[Math.floor(Math.random() * greetings.length)];
+        dialogue.textContent = randMsg;
+        modal.classList.remove('hidden');
+      }
+    }
+
+    function handleSpiritClick() {
+      requestFullScreen();
+
+      const modal = document.getElementById('spirit-modal');
+      const dialogue = document.getElementById('spirit-dialogue');
+
+      if (state.tutorialStep === 0) {
+        state.tutorialStep = 1;
+        dialogue.textContent = "まずは釜を10回タップして魔力を込めてみて！！";
+        saveGame();
+      } else if (state.tutorialStep === 1) {
+        modal.classList.add('hidden');
+      } else if (state.tutorialStep === 2) {
+        state.tutorialStep = 2.5;
+        dialogue.textContent = "あとは素材を釜に投入して好きなように錬金の研究をしてね♪";
+      } else if (state.tutorialStep === 2.5) {
+        state.tutorialStep = 3;
+        modal.classList.add('hidden');
+        saveGame();
+      } else if (state.tutorialStep === 3) {
+        modal.classList.add('hidden');
+      }
+    }
+
+    function openSpiritFeedModal() {
+      renderSpiritFeedList();
+      openModal('spirit-feed-modal');
+    }
+
+    function renderSpiritFeedList() {
+      const container = document.getElementById('spirit-feed-list');
+      const invKeys = Object.keys(state.inventory).filter(k => state.inventory[k] > 0);
+
+      if (invKeys.length === 0) {
+        container.innerHTML = `<div class="col-span-2 text-center py-8 text-xs text-gray-500">所持している素材がありません。<br>釜をタップして素材をゲットしよう！</div>`;
+        return;
+      }
+
+      container.innerHTML = invKeys.map(key => {
+        const item = ITEMS[key];
+        const count = state.inventory[key];
+        return `
+          <div onclick="feedSpiritToItem('${key}')" class="bg-slate-800/90 hover:bg-slate-700 p-3 rounded-xl border border-sky-500/30 hover:border-sky-400 flex items-center justify-between cursor-pointer transition active:scale-95">
+            <div class="flex items-center space-x-2.5 min-w-0">
+              ${getItemIconHTML(item, "w-8 h-8", "text-2xl")}
+              <div class="min-w-0">
+                <div class="text-xs font-bold text-sky-200 truncate">${item.name}</div>
+                <div class="text-[10px] text-gray-400">所持: ${count}</div>
+              </div>
+            </div>
+            <span class="text-xs bg-sky-950 text-sky-300 px-2 py-1 rounded border border-sky-800 shrink-0 font-bold">あげる</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function feedSpiritToItem(itemId) {
+      if (!state.inventory[itemId] || state.inventory[itemId] <= 0) return;
+
+      state.inventory[itemId]--;
+      if (state.inventory[itemId] <= 0) {
+        delete state.inventory[itemId];
+      }
+
+      closeModal('spirit-feed-modal');
+
+      const modal = document.getElementById('spirit-modal');
+      const dialogue = document.getElementById('spirit-dialogue');
+      const item = ITEMS[itemId];
+
+      if (itemId === 'angel_ring' && !state.spiritEvolved) {
+        state.spiritEvolved = true;
+        updateSpiritImages();
+        dialogue.innerHTML = `モグモグ…ぷはぁ～♪<br><span class="text-yellow-300 font-extrabold animate-pulse">✨ わぁ！身体に神聖な力が満ちていくよ…！姿が変わっちゃった！？</span>`;
+        submitScoreToFirebase();
+      } else {
+        dialogue.textContent = `モグモグ…ぷはぁ～♪ ${item.name}、美味しかったよありがとう！`;
+      }
+
+      modal.classList.remove('hidden');
+      updateUI();
+      saveGame();
+    }
+
+    function savePlayerName() {
+      const input = document.getElementById('player-name-input');
+      const name = input.value.trim();
+      if (name) {
+        state.playerName = name;
+        updateUI();
+        saveGame();
+        submitScoreToFirebase();
+      }
+    }
+
+    function toggleShowcase(itemId) {
+      const index = state.showcase.indexOf(itemId);
+      if (index > -1) {
+        state.showcase.splice(index, 1);
+      } else {
+        if (state.showcase.length < 3) {
+          state.showcase.push(itemId);
+        }
+      }
+      updateUI();
+      saveGame();
+    }
+
+    function addExp(amount) {
+      state.exp += amount;
+      let reqExp = getNextLevelExp(state.level);
+
+      while (state.exp >= reqExp) {
+        state.exp -= reqExp;
+        state.level++;
+        reqExp = getNextLevelExp(state.level);
+        showLevelUpEffect(state.level);
+      }
+      submitScoreToFirebase();
+    }
+
+    function showLevelUpEffect(newLevel) {
+      const container = document.getElementById('drop-popups');
+      const popup = document.createElement('div');
+      popup.className = 'absolute bg-gradient-to-r from-emerald-500 to-yellow-400 text-slate-950 font-extrabold px-6 py-3 rounded-full shadow-2xl flex items-center gap-2 animate-bounce z-40 text-base border-2 border-white';
+      popup.innerHTML = `<span>🎉 LEVEL UP! Lv.${newLevel}</span>`;
+      container.appendChild(popup);
+      setTimeout(() => popup.remove(), 2500);
+    }
+
+    function tapCauldron(event) {
+      if (state.tutorialStep === 0 || state.tutorialStep === 2 || state.tutorialStep === 2.5) return;
+
+      const cauldron = document.getElementById('cauldron');
+      cauldron.classList.remove('cauldron-shake');
+      void cauldron.offsetWidth;
+      cauldron.classList.add('cauldron-shake');
+
+      state.tapCount++;
+
+      if (state.tapCount >= 10) {
+        state.tapCount = 0;
+        const droppedItem = rollDropItem();
+        addInventory(droppedItem.id, 1);
+        showDropEffect(event, droppedItem);
+
+        if (state.tutorialStep === 1) {
+          state.tutorialStep = 2;
+          const modal = document.getElementById('spirit-modal');
+          const dialogue = document.getElementById('spirit-dialogue');
+          dialogue.textContent = "おぉ！！安心しました～♪魔力がなかったらどうしようかと思いました！！";
+          modal.classList.remove('hidden');
+        }
+      }
+
+      updateUI();
+      saveGame();
+    }
+
+    function rollDropItem() {
+      const rand = Math.random() * 100;
+      let cumulative = 0;
+      for (const item of DROP_TABLE) {
+        cumulative += item.dropRate;
+        if (rand <= cumulative) return item;
+      }
+      return ITEMS.weed;
+    }
+
+    function showDropEffect(event, item) {
+      const container = document.getElementById('drop-popups');
+      const popup = document.createElement('div');
+      popup.className = 'absolute bg-slate-950/90 text-emerald-300 border border-emerald-500/60 font-bold px-4 py-2 rounded-2xl shadow-2xl flex items-center gap-2 animate-bounce z-30 pointer-events-none text-sm';
+      const iconHTML = getItemIconHTML(item, "w-6 h-6", "text-xl");
+      popup.innerHTML = `<span>${iconHTML}</span> <span>${item.name} をGET!</span>`;
+      container.appendChild(popup);
+      setTimeout(() => popup.remove(), 1800);
+    }
+
+    function addInventory(itemId, count = 1) {
+      if (!state.inventory[itemId]) state.inventory[itemId] = 0;
+      state.inventory[itemId] += count;
+      state.discovered[itemId] = true;
+    }
+
+    function toggleSelectSlot(itemId) {
+      if (!state.inventory[itemId] || state.inventory[itemId] <= 0) return;
+      const currentSelectedCount = selectedSlots.filter(id => id === itemId).length;
+      if (currentSelectedCount >= state.inventory[itemId]) return;
+
+      if (selectedSlots.length < 5) {
+        selectedSlots.push(itemId);
+        renderAlchemySlots();
+      }
+    }
+
+    function removeSlotIndex(index) {
+      selectedSlots.splice(index, 1);
+      renderAlchemySlots();
+    }
+
+    function clearSlots() {
+      selectedSlots = [];
+      renderAlchemySlots();
+    }
+
+    function startAlchemyProcess() {
+      if (selectedSlots.length === 0) return;
+
+      lastUsedMaterials = [...selectedSlots];
+      selectedSlots.forEach(id => {
+        if (state.inventory[id]) {
+          state.inventory[id]--;
+          if (state.inventory[id] <= 0) delete state.inventory[id];
+        }
+      });
+
+      selectedSlots = [];
+      closeModal('alchemy-modal');
+      openModal('loading-modal');
+
+      let timeLeft = 5;
+      const timerText = document.getElementById('timer-text');
+      timerText.textContent = timeLeft;
+
+      const countdown = setInterval(() => {
+        timeLeft--;
+        timerText.textContent = timeLeft;
+        if (timeLeft <= 0) {
+          clearInterval(countdown);
+          closeModal('loading-modal');
+          finishAlchemyProcess();
+        }
+      }, 1000);
+    }
+
+    function finishAlchemyProcess() {
+      const sortedSelected = [...lastUsedMaterials].sort();
+      let matchedResultId = 'coal';
+
+      for (const recipe of RECIPES) {
+        const sortedRecipeMat = [...recipe.materials].sort();
+        if (JSON.stringify(sortedSelected) === JSON.stringify(sortedRecipeMat)) {
+          matchedResultId = recipe.result;
+          break;
+        }
+      }
+
+      const isFirstDiscovery = !state.discovered[matchedResultId];
+      let expGained = lastUsedMaterials.length;
+      if (isFirstDiscovery) expGained += 100;
+
+      addInventory(matchedResultId, 1);
+      addExp(expGained);
+
+      showResult(matchedResultId, expGained, isFirstDiscovery);
+      updateUI();
+      saveGame();
+    }
+
+    function showResult(itemId, expGained, isFirstDiscovery) {
+      const item = ITEMS[itemId];
+      const isCoal = itemId === 'coal';
+
+      document.getElementById('result-icon').innerHTML = getItemIconHTML(item, "w-16 h-16", "text-4xl");
+      document.getElementById('result-name').textContent = item.name;
+      document.getElementById('result-desc').textContent = item.desc;
+      
+      const expBadge = document.getElementById('exp-badge');
+      if (isFirstDiscovery) {
+        expBadge.textContent = `★新発見! +${expGained} EXP`;
+        expBadge.className = 'absolute top-4 right-4 bg-emerald-500 text-slate-950 font-extrabold text-[11px] px-2.5 py-1 rounded-full shadow-lg animate-pulse';
+      } else {
+        expBadge.textContent = `+${expGained} EXP`;
+        expBadge.className = 'absolute top-4 right-4 bg-emerald-500/20 border border-emerald-400 text-emerald-300 font-bold text-[10px] px-2 py-0.5 rounded-full';
+      }
+
+      const statusEl = document.getElementById('result-status');
+      const bgEl = document.getElementById('result-icon-bg');
+
+      if (isCoal) {
+        statusEl.textContent = '調合失敗...';
+        statusEl.className = 'text-xs font-bold tracking-widest text-gray-400 uppercase mb-1';
+        bgEl.className = 'w-20 h-20 mx-auto rounded-full bg-gray-800 border-2 border-gray-600 flex items-center justify-center mb-3 shadow-inner';
+      } else {
+        statusEl.textContent = isFirstDiscovery ? '✨ 新種発見！！' : '錬金成功！';
+        statusEl.className = 'text-xs font-bold tracking-widest text-emerald-400 uppercase mb-1 animate-pulse';
+        bgEl.className = 'w-20 h-20 mx-auto rounded-full bg-emerald-500/20 border-2 border-amber-400 flex items-center justify-center mb-3 shadow-inner';
+      }
+
+      const materialsContainer = document.getElementById('used-materials-container');
+      materialsContainer.innerHTML = lastUsedMaterials.map(matId => {
+        const mat = ITEMS[matId];
+        return `
+          <div class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 flex items-center gap-1 text-xs">
+            ${getItemIconHTML(mat, "w-4 h-4", "text-xs")}
+            <span class="text-gray-300 text-[10px] font-bold">${mat.name}</span>
+          </div>
+        `;
+      }).join('');
+
+      openModal('result-modal');
+    }
+
+    function updateUI() {
+      document.getElementById('player-name-display').textContent = state.playerName;
+      document.getElementById('player-level').textContent = `Lv.${state.level}`;
+      
+      const discoveredKeys = Object.keys(state.discovered).filter(k => state.discovered[k]);
+      const discoveredCount = discoveredKeys.length;
+      const currentRank = getAlchemistRank(discoveredCount);
+
+      document.getElementById('player-rank-display').textContent = currentRank;
+      document.getElementById('profile-rank-display').textContent = currentRank;
+      document.getElementById('profile-discovered-count').textContent = `${discoveredCount} 種類`;
+
+      const reqExp = getNextLevelExp(state.level);
+      const expPct = Math.min((state.exp / reqExp) * 100, 100);
+      document.getElementById('exp-text').textContent = `${state.exp} / ${reqExp} EXP`;
+      document.getElementById('exp-progress').style.width = `${expPct}%`;
+
+      const tapPct = (state.tapCount / 10) * 100;
+      document.getElementById('tap-progress').style.width = `${tapPct}%`;
+      document.getElementById('tap-count-text').textContent = `素材採取まで: ${state.tapCount} / 10`;
+
+      renderProbList();
+      renderInventoryList();
+      renderDictList();
+      renderProfileShowcase();
+      renderAlchemySlots();
+    }
+
+    function renderProbList() {
+      const container = document.getElementById('prob-list');
+      container.innerHTML = DROP_TABLE.map(item => `
+        <div class="flex items-center justify-between bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/50">
+          <div class="flex items-center space-x-2.5">
+            ${getItemIconHTML(item, "w-7 h-7", "text-xl")}
+            <div>
+              <div class="text-sm font-bold text-gray-200">${item.name}</div>
+              <div class="text-[10px] text-gray-400">${item.desc}</div>
+            </div>
+          </div>
+          <span class="text-xs font-mono font-bold text-emerald-400 bg-emerald-950/60 px-2 py-1 rounded border border-emerald-800/40">${item.dropRate}%</span>
+        </div>
+      `).join('');
+    }
+
+    function renderInventoryList() {
+      const container = document.getElementById('inventory-list');
+      const invKeys = Object.keys(state.inventory).filter(k => state.inventory[k] > 0);
+
+      if (invKeys.length === 0) {
+        container.innerHTML = `<div class="col-span-2 text-center py-8 text-xs text-gray-500">所持アイテムがありません。<br>釜をタップして採取しましょう！</div>`;
+        return;
+      }
+
+      container.innerHTML = invKeys.map(key => {
+        const item = ITEMS[key];
+        const count = state.inventory[key];
+        return `
+          <div class="bg-slate-800/70 p-3 rounded-xl border border-slate-700/60 flex items-center space-x-3">
+            ${getItemIconHTML(item, "w-8 h-8", "text-2xl")}
+            <div class="flex-1 min-w-0">
+              <div class="text-xs font-bold text-emerald-200 truncate">${item.name}</div>
+              <div class="text-[10px] text-gray-400">所持数: <span class="text-white font-mono font-bold">${count}</span></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderDictList() {
+      const container = document.getElementById('dict-list');
+      const discoveredKeys = Object.keys(state.discovered).filter(k => state.discovered[k]);
+
+      if (discoveredKeys.length === 0) {
+        container.innerHTML = `<div class="col-span-2 text-center py-8 text-xs text-gray-500">まだ何も発見していません</div>`;
+        return;
+      }
+
+      container.innerHTML = discoveredKeys.map(key => {
+        const item = ITEMS[key];
+        return `
+          <div class="bg-slate-800/90 p-3 rounded-xl border border-emerald-500/30 flex items-center space-x-2.5">
+            ${getItemIconHTML(item, "w-8 h-8", "text-2xl")}
+            <div class="flex-1 min-w-0">
+              <div class="text-xs font-bold text-emerald-300 truncate">${item.name}</div>
+              <div class="text-[10px] text-gray-300 leading-tight line-clamp-2">${item.desc}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderProfileShowcase() {
+      const slotsContainer = document.getElementById('showcase-select-slots');
+      let slotsHTML = '';
+      for (let i = 0; i < 3; i++) {
+        if (i < state.showcase.length) {
+          const itemId = state.showcase[i];
+          const item = ITEMS[itemId];
+          slotsHTML += `
+            <div onclick="toggleShowcase('${itemId}')" class="h-14 rounded-lg bg-emerald-950/80 border border-emerald-500/60 flex flex-col items-center justify-center cursor-pointer relative group">
+              ${getItemIconHTML(item, "w-6 h-6", "text-xl")}
+              <span class="text-[9px] text-emerald-200 font-bold truncate w-full px-0.5 text-center">${item.name}</span>
+              <span class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-[9px] flex items-center justify-center font-bold">×</span>
+            </div>
+          `;
+        } else {
+          slotsHTML += `
+            <div class="h-14 rounded-lg bg-slate-900 border border-dashed border-slate-700 flex items-center justify-center text-slate-600 text-xs font-mono">
+              空き
+            </div>
+          `;
+        }
+      }
+      slotsContainer.innerHTML = slotsHTML;
+
+      const listContainer = document.getElementById('showcase-selectable-list');
+      const discoveredKeys = Object.keys(state.discovered).filter(k => state.discovered[k]);
+
+      if (discoveredKeys.length === 0) {
+        listContainer.innerHTML = `<div class="text-center py-4 text-xs text-gray-500">発見した素材がまだありません</div>`;
+        return;
+      }
+
+      listContainer.innerHTML = discoveredKeys.map(key => {
+        const item = ITEMS[key];
+        const isSelected = state.showcase.includes(key);
+        return `
+          <div onclick="toggleShowcase('${key}')" class="p-2.5 rounded-xl border transition flex items-center justify-between cursor-pointer ${
+            isSelected 
+              ? 'bg-emerald-950/60 border-emerald-500 text-emerald-200' 
+              : 'bg-slate-800/80 border-slate-700 hover:border-slate-500 text-gray-200'
+          }">
+            <div class="flex items-center space-x-3">
+              ${getItemIconHTML(item, "w-8 h-8", "text-2xl")}
+              <div>
+                <div class="text-xs font-bold">${item.name}</div>
+                <div class="text-[10px] opacity-75">${item.desc}</div>
+              </div>
+            </div>
+            <div class="text-xs font-bold ${isSelected ? 'text-emerald-400' : 'text-gray-500'}">
+              ${isSelected ? '★ 展示中' : '選択'}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderAlchemySlots() {
+      const slotsContainer = document.getElementById('alchemy-slots');
+      document.getElementById('slot-count').textContent = selectedSlots.length;
+
+      let slotsHTML = '';
+      for (let i = 0; i < 5; i++) {
+        if (i < selectedSlots.length) {
+          const itemId = selectedSlots[i];
+          const item = ITEMS[itemId];
+          slotsHTML += `
+            <button onclick="removeSlotIndex(${i})" class="h-14 rounded-lg bg-emerald-950/80 border border-emerald-500/60 flex flex-col items-center justify-center relative group active:scale-95 transition">
+              ${getItemIconHTML(item, "w-6 h-6", "text-xl")}
+              <span class="text-[9px] text-emerald-200 font-bold truncate w-full px-0.5 text-center">${item.name}</span>
+              <span class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-[9px] flex items-center justify-center font-bold">×</span>
+            </button>
+          `;
+        } else {
+          slotsHTML += `
+            <div class="h-14 rounded-lg bg-slate-900 border border-dashed border-slate-700 flex items-center justify-center text-slate-700">
+              <span class="text-xs font-mono">${i + 1}</span>
+            </div>
+          `;
+        }
+      }
+      slotsContainer.innerHTML = slotsHTML;
+
+      const mixBtn = document.getElementById('mix-btn');
+      if (selectedSlots.length > 0) {
+        mixBtn.disabled = false;
+        mixBtn.className = "w-full py-3 bg-gradient-to-r from-emerald-600 via-teal-500 to-amber-500 hover:from-emerald-500 hover:to-amber-400 text-slate-950 font-bold rounded-xl shadow-lg transition active:scale-95 cursor-pointer";
+      } else {
+        mixBtn.disabled = true;
+        mixBtn.className = "w-full py-3 bg-slate-800 text-gray-500 font-bold rounded-xl border border-slate-700 transition opacity-50 cursor-not-allowed";
+      }
+
+      renderAlchemySelectList();
+    }
+
+    function renderAlchemySelectList() {
+      const container = document.getElementById('alchemy-select-list');
+      const invKeys = Object.keys(state.inventory).filter(k => state.inventory[k] > 0);
+
+      if (invKeys.length === 0) {
+        container.innerHTML = `<div class="text-center py-6 text-xs text-gray-500">投入できる素材を持っていません</div>`;
+        return;
+      }
+
+      container.innerHTML = invKeys.map(key => {
+        const item = ITEMS[key];
+        const totalCount = state.inventory[key];
+        const usedCount = selectedSlots.filter(id => id === key).length;
+        const remainCount = totalCount - usedCount;
+
+        const disabled = remainCount <= 0 || selectedSlots.length >= 5;
+
+        return `
+          <div onclick="toggleSelectSlot('${key}')" class="p-2.5 rounded-xl border transition flex items-center justify-between cursor-pointer ${
+            disabled 
+              ? 'bg-slate-950/40 border-slate-800/40 opacity-40 cursor-not-allowed' 
+              : 'bg-slate-800/90 border-slate-700 hover:border-emerald-500/50 active:scale-98'
+          }">
+            <div class="flex items-center space-x-3">
+              ${getItemIconHTML(item, "w-8 h-8", "text-2xl")}
+              <div>
+                <div class="text-xs font-bold text-gray-200">${item.name}</div>
+                <div class="text-[10px] text-gray-400">${item.desc}</div>
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="text-xs font-mono font-bold ${remainCount > 0 ? 'text-emerald-400' : 'text-gray-500'}">残り ${remainCount}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openModal(id) {
+      document.getElementById(id).classList.remove('hidden');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadGame();
+    });
+  </script>
+</body>
+</html>
